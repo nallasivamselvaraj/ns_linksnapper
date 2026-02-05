@@ -110,3 +110,10 @@
 .menu-item:hover { background: #f1f5f9; }
 
 .menu-item.danger { color: #b91c1c; }
+
+/* category header menu positioning */
+.category-header { align-items: center; }
+.category-header .header-left { display: flex; align-items: center; }
+.category-header .header-right { display: flex; align-items: center; gap: 8px; position: relative; }
+.category-header .header-menu { font-size: 18px; padding: 4px 8px; background: transparent; color: white; border: none; cursor: pointer; }
+.category-header .menu { top: 44px; right: 0; }

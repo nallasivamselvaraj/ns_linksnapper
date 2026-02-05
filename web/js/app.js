@@ -71,8 +71,14 @@ function renderAccordion(data) {
     html += `
       <div class="category-card">
         <div class="category-header" onclick="toggleCategory(this)">
-          <span>${category}</span>
-          <span class="count">${links.length}</span>
+          <div class="header-left"><span>${category}</span></div>
+          <div class="header-right">
+            <span class="count">${links.length}</span>
+            <button class="menu-btn header-menu" onclick="event.stopPropagation(); toggleCategoryMenu('${encodeURIComponent(category)}', event)">⋮</button>
+            <div id="catmenu-${encodeURIComponent(category)}" class="menu" onclick="event.stopPropagation()">
+              <button class="menu-item" onclick="editCategory('${encodeURIComponent(category)}')">Edit Category</button>
+            </div>
+          </div>
         </div>
         <div class="category-body">
           ${linksHTML}
@@ -82,6 +88,25 @@ function renderAccordion(data) {
   });
 
   cardsDiv.innerHTML = html;
+}
+
+async function editCategory(encodedCategory) {
+  const oldCategory = decodeURIComponent(encodedCategory);
+  const newCategory = prompt('Rename category', oldCategory);
+  if (newCategory == null) return; // cancelled
+  if (newCategory === oldCategory) return;
+
+  const { data, error } = await supabaseClient
+    .from('links')
+    .update({ category: newCategory })
+    .eq('category', oldCategory);
+
+  if (error) {
+    console.error('Error renaming category:', error);
+    return;
+  }
+
+  loadLinks();
 }
 
 async function editLink(id) {
