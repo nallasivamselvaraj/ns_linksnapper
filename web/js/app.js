@@ -53,10 +53,14 @@ function renderAccordion(data) {
     let linksHTML = "";
     links.forEach(link => {
       linksHTML += `
-        <div class="link-item">
-          <h4>${link.title}</h4>
+        <div class="link-item" data-id="${link.id}">
+          <h4 class="link-title">${link.title}</h4>
           <a href="${link.url}" target="_blank">${link.url}</a>
           <small>${new Date(link.created_at).toLocaleString()}</small>
+          <div class="actions">
+            <button class="btn-edit" onclick="editLink(${link.id})">Edit</button>
+            <button class="btn-delete" onclick="deleteLink(${link.id})">Delete</button>
+          </div>
         </div>
       `;
     });
@@ -75,6 +79,90 @@ function renderAccordion(data) {
   });
 
   cardsDiv.innerHTML = html;
+}
+
+async function editLink(id) {
+  const item = document.querySelector(`[data-id="${id}"]`);
+  if (!item) return;
+
+  // fetch latest record
+  const { data, error } = await supabaseClient
+    .from('links')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    console.error('Error fetching link for edit:', error);
+    return;
+  }
+
+  const link = data;
+
+  item.innerHTML = `
+    <div class="edit-row">
+      <input class="edit-title" value="${escapeHtml(link.title || '')}" placeholder="Title">
+      <input class="edit-category" value="${escapeHtml(link.category || '')}" placeholder="Category">
+      <div class="edit-actions">
+        <button onclick="saveLink(${id})">Save</button>
+        <button onclick="cancelEdit(${id})">Cancel</button>
+      </div>
+    </div>
+  `;
+}
+
+async function saveLink(id) {
+  const item = document.querySelector(`[data-id="${id}"]`);
+  if (!item) return;
+
+  const titleInput = item.querySelector('.edit-title');
+  const categoryInput = item.querySelector('.edit-category');
+
+  const updated = {};
+  if (titleInput) updated.title = titleInput.value;
+  if (categoryInput) updated.category = categoryInput.value;
+
+  const { data, error } = await supabaseClient
+    .from('links')
+    .update(updated)
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error updating link:', error);
+    return;
+  }
+
+  loadLinks();
+}
+
+function cancelEdit(id) {
+  loadLinks();
+}
+
+async function deleteLink(id) {
+  if (!confirm('Delete this link?')) return;
+
+  const { data, error } = await supabaseClient
+    .from('links')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error deleting link:', error);
+    return;
+  }
+
+  loadLinks();
+}
+
+// simple escape for values injected into templates
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 function toggleCategory(header) {
