@@ -111,6 +111,7 @@ async function loadLinks() {
     return;
   }
 
+  console.log('Loaded links from database:', data?.length || 0, 'records');
   renderAccordion(data);
 }
 
@@ -360,6 +361,8 @@ function cancelEdit(id) {
 }
 
 async function deleteLink(id) {
+  console.log('Attempting to delete link with ID:', id);
+  
   // Get link details for confirmation message
   const item = document.querySelector(`[data-id="${id}"]`);
   const title = item?.querySelector('.link-title')?.textContent || 'this link';
@@ -370,28 +373,32 @@ async function deleteLink(id) {
 
   showLoading(true);
   
-  const { data, error } = await supabaseClient
-    .from('links')
-    .delete()
-    .eq('id', id);
+  try {
+    const { data, error } = await supabaseClient
+      .from('links')
+      .delete()
+      .eq('id', id)
+      .select();
 
-  showLoading(false);
-  
-  if (error) {
-    console.error('Error deleting link:', error);
-    showNotification('Failed to delete link', 'error');
-    return;
-  }
+    console.log('Delete response:', { data, error });
 
-  showNotification('Link deleted successfully', 'success');
-  
-  // Animate removal
-  if (item) {
-    item.style.opacity = '0';
-    item.style.transform = 'translateX(-20px)';
-    setTimeout(() => loadLinks(), 300);
-  } else {
+    showLoading(false);
+    
+    if (error) {
+      console.error('Error deleting link:', error);
+      showNotification('Failed to delete link: ' + error.message, 'error');
+      return;
+    }
+
+    showNotification('Link deleted successfully', 'success');
+    
+    // Force immediate reload without animation to ensure UI updates
     loadLinks();
+    
+  } catch (err) {
+    showLoading(false);
+    console.error('Exception while deleting:', err);
+    showNotification('Error deleting link', 'error');
   }
 }
 
