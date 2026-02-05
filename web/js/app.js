@@ -390,6 +390,13 @@ async function deleteLink(id) {
       return;
     }
 
+    // Check if any rows were actually deleted
+    if (!data || data.length === 0) {
+      console.error('No rows deleted - likely RLS policy issue');
+      showNotification('Delete blocked by database permissions. Please check Supabase RLS policies.', 'error');
+      return;
+    }
+
     showNotification('Link deleted successfully', 'success');
     
     // Force immediate reload without animation to ensure UI updates
