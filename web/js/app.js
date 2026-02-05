@@ -9,7 +9,7 @@ async function initApp() {
   app.innerHTML = `
     <header>
       <h1>📊 NS LinkSnapper</h1>
-      <p>Category Based Knowledge Dashboard</p>
+      <p>Links Vault</p>
     </header>
 
     <div class="dashboard">
