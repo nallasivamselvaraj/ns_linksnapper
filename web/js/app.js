@@ -58,8 +58,11 @@ function renderAccordion(data) {
           <a href="${link.url}" target="_blank">${link.url}</a>
           <small>${new Date(link.created_at).toLocaleString()}</small>
           <div class="actions">
-            <button class="btn-edit" onclick="editLink(${link.id})">Edit</button>
-            <button class="btn-delete" onclick="deleteLink(${link.id})">Delete</button>
+            <button class="menu-btn" onclick="toggleMenu('${link.id}', event)">⋮</button>
+            <div id="menu-${link.id}" class="menu" onclick="event.stopPropagation()">
+              <button class="menu-item" onclick="editLink('${link.id}')">Edit</button>
+              <button class="menu-item danger" onclick="deleteLink('${link.id}')">Delete</button>
+            </div>
           </div>
         </div>
       `;
@@ -104,8 +107,8 @@ async function editLink(id) {
       <input class="edit-title" value="${escapeHtml(link.title || '')}" placeholder="Title">
       <input class="edit-category" value="${escapeHtml(link.category || '')}" placeholder="Category">
       <div class="edit-actions">
-        <button onclick="saveLink(${id})">Save</button>
-        <button onclick="cancelEdit(${id})">Cancel</button>
+        <button onclick="saveLink('${id}')">Save</button>
+        <button onclick="cancelEdit('${id}')">Cancel</button>
       </div>
     </div>
   `;
@@ -154,6 +157,22 @@ async function deleteLink(id) {
 
   loadLinks();
 }
+
+function toggleMenu(id, evt) {
+  if (evt && evt.stopPropagation) evt.stopPropagation();
+  closeAllMenus();
+  const menu = document.getElementById(`menu-${id}`);
+  if (menu) menu.classList.toggle('open');
+}
+
+function closeAllMenus() {
+  document.querySelectorAll('.menu.open').forEach(m => m.classList.remove('open'));
+}
+
+// close menus on outside click
+document.addEventListener('click', function () {
+  closeAllMenus();
+});
 
 // simple escape for values injected into templates
 function escapeHtml(str) {
