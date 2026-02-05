@@ -288,7 +288,7 @@ async function editLink(id) {
     if (firstInput) firstInput.focus();
   }, 50);
 }
-}
+
 
 async function saveLink(id) {
   const item = document.querySelector(`[data-id="${id}"]`);
