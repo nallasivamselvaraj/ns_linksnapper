@@ -6,6 +6,78 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 // Global state
 let isEditing = false;
 
+// Utility functions
+function truncateUrl(url, maxLength = 60) {
+  if (url.length <= maxLength) return url;
+  return url.substring(0, maxLength) + '...';
+}
+
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffTime = Math.abs(now - date);
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays === 0) {
+    return 'Today at ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  } else if (diffDays === 1) {
+    return 'Yesterday';
+  } else if (diffDays < 7) {
+    return diffDays + ' days ago';
+  } else {
+    return date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+}
+
+function showLoading(show) {
+  let loader = document.getElementById('global-loader');
+  
+  if (show) {
+    if (!loader) {
+      loader = document.createElement('div');
+      loader.id = 'global-loader';
+      loader.className = 'loader-overlay';
+      loader.innerHTML = '<div class="loader-spinner"></div>';
+      document.body.appendChild(loader);
+    }
+    loader.style.display = 'flex';
+  } else {
+    if (loader) {
+      loader.style.display = 'none';
+    }
+  }
+}
+
+function showNotification(message, type = 'info') {
+  const notification = document.createElement('div');
+  notification.className = `notification notification-${type}`;
+  
+  const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : type === 'warning' ? '⚠' : 'ℹ';
+  
+  notification.innerHTML = `
+    <span class="notification-icon">${icon}</span>
+    <span class="notification-message">${message}</span>
+  `;
+  
+  document.body.appendChild(notification);
+  
+  setTimeout(() => notification.classList.add('show'), 10);
+  
+  setTimeout(() => {
+    notification.classList.remove('show');
+    setTimeout(() => notification.remove(), 300);
+  }, 3000);
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 async function initApp() {
   const app = document.getElementById("app");
 
@@ -321,79 +393,6 @@ async function deleteLink(id) {
   } else {
     loadLinks();
   }
-}
-
-// Utility functions
-function truncateUrl(url, maxLength = 60) {
-  if (url.length <= maxLength) return url;
-  return url.substring(0, maxLength) + '...';
-}
-
-function formatDate(dateString) {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffTime = Math.abs(now - date);
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  
-  if (diffDays === 0) {
-    return 'Today at ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  } else if (diffDays === 1) {
-    return 'Yesterday';
-  } else if (diffDays < 7) {
-    return diffDays + ' days ago';
-  } else {
-    return date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
-  }
-}
-
-function showLoading(show) {
-  let loader = document.getElementById('global-loader');
-  
-  if (show) {
-    if (!loader) {
-      loader = document.createElement('div');
-      loader.id = 'global-loader';
-      loader.className = 'loader-overlay';
-      loader.innerHTML = '<div class="loader-spinner"></div>';
-      document.body.appendChild(loader);
-    }
-    loader.style.display = 'flex';
-  } else {
-    if (loader) {
-      loader.style.display = 'none';
-    }
-  }
-}
-
-function showNotification(message, type = 'info') {
-  const notification = document.createElement('div');
-  notification.className = `notification notification-${type}`;
-  
-  const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : type === 'warning' ? '⚠' : 'ℹ';
-  
-  notification.innerHTML = `
-    <span class="notification-icon">${icon}</span>
-    <span class="notification-message">${message}</span>
-  `;
-  
-  document.body.appendChild(notification);
-  
-  setTimeout(() => notification.classList.add('show'), 10);
-  
-  setTimeout(() => {
-    notification.classList.remove('show');
-    setTimeout(() => notification.remove(), 300);
-  }, 3000);
-}
-
-// simple escape for values injected into templates
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/\"/g, '&quot;')
-    .replace(/'/g, '&#039;');
 }
 
 function toggleCategory(header) {
