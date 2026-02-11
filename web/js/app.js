@@ -83,12 +83,61 @@ async function initApp() {
 
   app.innerHTML = `
     <header>
-      <h1>📊 NS LinkSnapper</h1>
-      <p>Links Vault</p>
+      <div class="header-content">
+        <div class="header-text">
+          <h1>📊 NS LinkSnapper</h1>
+          <p>Links Vault</p>
+        </div>
+        <button class="add-link-btn" onclick="openAddLinkModal()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Add Link
+        </button>
+      </div>
     </header>
 
     <div class="dashboard">
       <div id="cards" class="accordion"></div>
+    </div>
+
+    <!-- Add Link Modal -->
+    <div id="addLinkModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>➕ Add New Link</h2>
+          <button class="modal-close" onclick="closeAddLinkModal()">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="edit-field">
+            <label>📝 Title</label>
+            <input type="text" id="newLinkTitle" class="edit-input" placeholder="Enter link title" />
+          </div>
+          <div class="edit-field">
+            <label>🔗 URL</label>
+            <input type="url" id="newLinkUrl" class="edit-input" placeholder="https://example.com" />
+          </div>
+          <div class="edit-field">
+            <label>📁 Category</label>
+            <input type="text" id="newLinkCategory" class="edit-input" placeholder="General" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-cancel" onclick="closeAddLinkModal()">Cancel</button>
+          <button class="btn-save" onclick="saveNewLink()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            Add Link
+          </button>
+        </div>
+      </div>
     </div>
   `;
 
@@ -417,6 +466,89 @@ function toggleCategory(header) {
   
   if (icon) {
     icon.style.transform = body.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0deg)';
+  }
+}
+
+function openAddLinkModal() {
+  const modal = document.getElementById('addLinkModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    // Clear previous inputs
+    document.getElementById('newLinkTitle').value = '';
+    document.getElementById('newLinkUrl').value = '';
+    document.getElementById('newLinkCategory').value = '';
+    // Focus on title input
+    setTimeout(() => document.getElementById('newLinkTitle').focus(), 100);
+  }
+}
+
+function closeAddLinkModal() {
+  const modal = document.getElementById('addLinkModal');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+}
+
+async function saveNewLink() {
+  const titleInput = document.getElementById('newLinkTitle');
+  const urlInput = document.getElementById('newLinkUrl');
+  const categoryInput = document.getElementById('newLinkCategory');
+
+  const title = titleInput.value.trim();
+  const url = urlInput.value.trim();
+  const category = categoryInput.value.trim() || 'General';
+
+  // Validation
+  if (!title) {
+    showNotification('Please enter a title', 'error');
+    titleInput.focus();
+    return;
+  }
+
+  if (!url) {
+    showNotification('Please enter a URL', 'error');
+    urlInput.focus();
+    return;
+  }
+
+  // Validate URL format
+  try {
+    new URL(url);
+  } catch (e) {
+    showNotification('Please enter a valid URL (include http:// or https://)', 'error');
+    urlInput.focus();
+    return;
+  }
+
+  showLoading(true);
+
+  const { data, error } = await supabaseClient
+    .from('links')
+    .insert([{
+      title: title,
+      url: url,
+      category: category
+    }])
+    .select();
+
+  showLoading(false);
+
+  if (error) {
+    console.error('Error adding link:', error);
+    showNotification('Failed to add link: ' + error.message, 'error');
+    return;
+  }
+
+  showNotification('Link added successfully! 🎉', 'success');
+  closeAddLinkModal();
+  loadLinks();
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+  const modal = document.getElementById('addLinkModal');
+  if (event.target === modal) {
+    closeAddLinkModal();
   }
 }
 
